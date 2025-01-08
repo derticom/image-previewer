@@ -1,6 +1,6 @@
 module github.com/derticom/image-previewer
 
-go 1.23.2
+go 1.23
 
 require (
 	github.com/disintegration/imaging v1.6.2
