@@ -35,7 +35,7 @@ func TestClient_DownloadImage(t *testing.T) {
 		{
 			name: "OK case",
 			args: args{
-				imgURL: "https://raw.githubusercontent.com/OtusGolang/final_project/master/examples/image-previewer/_gopher_original_1024x504.jpg",
+				imgURL: "https://raw.githubusercontent.com/OtusGolang/final_project/master/examples/image-previewer/_gopher_original_1024x504.jpg", //nolint:lll // long URL.
 				headers: model.Headers{
 					"Test-Header": []string{"Some value"},
 				},

@@ -89,9 +89,6 @@ func (s *Server) Run(ctx context.Context) error {
 	return nil
 }
 
-// revive:disable:cognitive-complexity // todo
-//
-//nolint:funlen // todo
 func (s *Server) handle(w http.ResponseWriter, r *http.Request) {
 	s.log.Info("start processing", "request", r.URL.Path)
 

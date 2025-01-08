@@ -8,6 +8,7 @@ import (
 	"github.com/ilyakaznacheev/cleanenv"
 )
 
+//nolint:tagliatelle // snake_case is allowed here.
 type Config struct {
 	LogLevel    string     `yaml:"log_level"`
 	StoragePath string     `yaml:"storage_path"`

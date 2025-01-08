@@ -9,10 +9,8 @@ import (
 	"strings"
 	"syscall"
 
-	"github.com/derticom/image-previewer/internal/cache"
-	"github.com/derticom/image-previewer/internal/client"
-	"github.com/derticom/image-previewer/internal/config"
-	"github.com/derticom/image-previewer/internal/server"
+	"github.com/derticom/image-previewer/config"
+	"github.com/derticom/image-previewer/internal/app"
 )
 
 func main() {
@@ -21,27 +19,22 @@ func main() {
 
 	cfg := config.NewConfig()
 
-	logger, err := setupLogger(cfg)
+	log, err := setupLogger(cfg)
 	if err != nil {
 		panic(fmt.Sprintf("failed to setup loggerr: %+v", err))
 	}
 
-	imgCache := cache.New(cfg.CacheSize, logger.WithGroup("cache"))
+	go func() {
+		if err = app.Run(ctx, cfg, log); err != nil {
+			log.Error("critical service error", "error", err)
+			stop()
+			return
+		}
+	}()
 
-	downloader := client.New(cfg.Server.Timeout, logger.WithGroup("downloader"))
+	<-ctx.Done()
 
-	proxyServer := server.New(
-		imgCache,
-		downloader,
-		cfg.Server.Address,
-		cfg.Server.Timeout,
-		logger.WithGroup("server"),
-	)
-
-	err = proxyServer.Run(ctx)
-	if err != nil {
-		logger.Error("failed to proxyServer.Run", "error", err)
-	}
+	log.Info("shutdown service ...")
 }
 
 func setupLogger(cfg *config.Config) (*slog.Logger, error) {
