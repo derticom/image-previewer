@@ -36,7 +36,7 @@ func TestResizer_ResizeImage(t *testing.T) {
 				Height: 200,
 				Data:   data,
 			},
-			wantResizedImgPath: "https:__raw.githubusercontent.com__gopher_original_1024x504.jpg",
+			wantResizedImgPath: "300_200_https:__raw.githubusercontent.com__gopher_original_1024x504.jpg",
 			wantErr:            false,
 		},
 	}
@@ -50,6 +50,9 @@ func TestResizer_ResizeImage(t *testing.T) {
 			if gotResizedImgPath != tt.wantResizedImgPath {
 				t.Errorf("ResizeImage() gotResizedImgPath = %v, want %v", gotResizedImgPath, tt.wantResizedImgPath)
 			}
+
+			err = os.Remove(StoragePath + tt.wantResizedImgPath)
+			require.NoError(t, err)
 		})
 	}
 }
