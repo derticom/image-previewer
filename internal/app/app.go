@@ -6,7 +6,7 @@ import (
 
 	"github.com/derticom/image-previewer/config"
 	"github.com/derticom/image-previewer/internal/cache"
-	"github.com/derticom/image-previewer/internal/client"
+	"github.com/derticom/image-previewer/internal/downloader"
 	"github.com/derticom/image-previewer/internal/server"
 
 	"github.com/pkg/errors"
@@ -15,11 +15,11 @@ import (
 func Run(ctx context.Context, cfg *config.Config, log *slog.Logger) error {
 	imgCache := cache.New(cfg.CacheSize, log.WithGroup("cache"))
 
-	downloader := client.New(cfg.Server.Timeout, log.WithGroup("downloader"))
+	imgDownloader := downloader.New(cfg.Server.Timeout, log.WithGroup("downloader"))
 
 	proxyServer := server.New(
 		imgCache,
-		downloader,
+		imgDownloader,
 		cfg.Server.Address,
 		cfg.Server.Timeout,
 		log.WithGroup("server"),

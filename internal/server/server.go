@@ -18,7 +18,7 @@ import (
 )
 
 type ImageDownloader interface {
-	DownloadImage(ctx context.Context, imgURL string, requestHeaders model.Headers) (img *model.Image, err error)
+	DownloadImage(ctx context.Context, request model.Request) (img *model.Image, err error)
 }
 
 type ImageResizer interface {
@@ -113,10 +113,17 @@ func (s *Server) handle(w http.ResponseWriter, r *http.Request) {
 	}
 
 	url := r.PathValue("url")
+	params := r.URL.RawQuery
 
 	requestHeaders := model.Headers{}
 	for key, values := range r.Header {
 		requestHeaders[key] = append(requestHeaders[key], values...)
+	}
+
+	request := model.Request{
+		URL:     url,
+		Params:  params,
+		Headers: requestHeaders,
 	}
 
 	resizedImageName, ok := s.cache.Get(
@@ -127,9 +134,10 @@ func (s *Server) handle(w http.ResponseWriter, r *http.Request) {
 			"url", url,
 			"width", width,
 			"height", height,
+			"parameters", params,
 		)
 
-		img, err := s.downloader.DownloadImage(r.Context(), url, requestHeaders)
+		img, err := s.downloader.DownloadImage(r.Context(), request)
 		if err != nil {
 			s.log.Error("failed to download image", "error", err)
 			_, err := fmt.Fprintf(w, "failed to download image")

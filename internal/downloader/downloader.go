@@ -1,7 +1,9 @@
-package client
+// Package downloader предназначен для скачивания исходного изображения из сети.
+package downloader
 
 import (
 	"context"
+	"fmt"
 	"io"
 	"log/slog"
 	"net/http"
@@ -15,13 +17,13 @@ import (
 
 const methodType = "GET"
 
-type Client struct {
+type Downloader struct {
 	client *http.Client
 	log    *slog.Logger
 }
 
-func New(timeout time.Duration, log *slog.Logger) *Client {
-	return &Client{
+func New(timeout time.Duration, log *slog.Logger) *Downloader {
+	return &Downloader{
 		client: &http.Client{
 			Timeout: timeout,
 		},
@@ -29,21 +31,27 @@ func New(timeout time.Duration, log *slog.Logger) *Client {
 	}
 }
 
-func (c *Client) DownloadImage(
+// DownloadImage принимает входящий запрос, обрабатывает его и скачивает изображение.
+// Возвращает объект model.Image, содержащий изображение в байтовом формате и его название.
+func (c *Downloader) DownloadImage(
 	ctx context.Context,
-	imgURL string,
-	requestHeaders model.Headers,
+	request model.Request,
 ) (img *model.Image, err error) {
-	if !strings.HasPrefix(imgURL, "http") {
-		imgURL = "https://" + imgURL
+	if !strings.HasPrefix(request.URL, "http") {
+		request.URL = "https://" + request.URL
 	}
 
-	req, err := http.NewRequestWithContext(ctx, methodType, imgURL, http.NoBody)
+	url := request.URL
+	if request.Params != "" {
+		url = fmt.Sprintf("%s?%s", request.URL, request.Params)
+	}
+
+	req, err := http.NewRequestWithContext(ctx, methodType, url, http.NoBody)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to http.NewRequest")
 	}
 
-	for key, values := range requestHeaders {
+	for key, values := range request.Headers {
 		for _, value := range values {
 			req.Header.Set(key, value)
 		}
@@ -63,7 +71,7 @@ func (c *Client) DownloadImage(
 
 	if resp.StatusCode != http.StatusOK {
 		c.log.Error("unexpected status code while downloading image",
-			"URL", imgURL,
+			"URL", request.URL,
 			"StatusCode", resp.StatusCode,
 			"Status", resp.Status)
 		return nil, errors.New("unexpected status code")
@@ -75,7 +83,7 @@ func (c *Client) DownloadImage(
 	}
 
 	return &model.Image{
-		Source: imgURL,
+		Source: request.URL,
 		Data:   data,
 	}, nil
 }
