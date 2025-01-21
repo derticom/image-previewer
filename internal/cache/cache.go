@@ -1,6 +1,9 @@
 package cache
 
-import "log/slog"
+import (
+	"log/slog"
+	"sync"
+)
 
 type Key string
 
@@ -16,6 +19,8 @@ type Element struct {
 }
 
 type lruCache struct {
+	mutex sync.Mutex
+
 	capacity int
 	queue    List
 	items    map[Key]*ListItem
@@ -33,6 +38,9 @@ func New(capacity int, log *slog.Logger) Cache {
 }
 
 func (c *lruCache) Set(key Key, value any) bool {
+	c.mutex.Lock()
+	defer c.mutex.Unlock()
+
 	item, ok := c.items[key]
 	if ok {
 		item.Value = &Element{
@@ -66,6 +74,9 @@ func (c *lruCache) Set(key Key, value any) bool {
 }
 
 func (c *lruCache) Get(key Key) (any, bool) {
+	c.mutex.Lock()
+	defer c.mutex.Unlock()
+
 	item, ok := c.items[key]
 	if ok {
 		c.queue.MoveToFront(item)
@@ -83,6 +94,9 @@ func (c *lruCache) Get(key Key) (any, bool) {
 }
 
 func (c *lruCache) Clear() {
+	c.mutex.Lock()
+	defer c.mutex.Unlock()
+
 	c.queue = NewList()
 	c.items = make(map[Key]*ListItem, c.capacity)
 }
