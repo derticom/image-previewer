@@ -57,12 +57,11 @@ func (r *Resizer) ResizeImage(img *model.Image) (resizedImgPath string, err erro
 
 	resizedImg := imaging.Fill(src, img.Width, img.Height, imaging.Center, imaging.Lanczos)
 
-	// Create a new image and paste the four produced images into it.
+	// Create a new image and paste produced image into it.
 	dst := imaging.New(img.Width, img.Height, color.NRGBA{})
 	dst = imaging.Paste(dst, resizedImg, image.Pt(0, 0))
 
 	// Save the resulting image as JPEG.
-
 	err = imaging.Save(dst, StoragePath+fileName)
 	if err != nil {
 		return "", errors.Wrap(err, "failed to imaging.Save")
